@@ -1,0 +1,177 @@
+  {
+  "campeones": [
+    {
+      "nombre": "Leblanc",
+      "clase": "Mago",
+      "recurso": "mana",
+      "imagen": "https://leagueoflegends.fandom.com/es/wiki/LeBlanc",
+      "descripcion": "LeBlanc se desliza entre las sombras, dejando ilusiones tras de sí y confundiendo a sus enemigos.",
+      "habilidades": [
+        {
+          "tipo": "Pasiva",
+          "descripcion": "Periódicamente, cuando LeBlanc sufre daños hasta el 40 % de su salud máxima, crea un clon de ella misma, después de lo cual ambos se vuelven instantáneamente invisibles durante 1 segundo."
+        },
+        {
+          "coste": 70,
+          "descripcion": "Proyecta un sello que inflige daño mágico y marca al objetivo durante 3.5 seg.",
+          "imagen": "../fotos/habilidades/leblanc_q.webp"
+        },
+        {
+          "coste": 90,
+          "descripcion": "LeBlanc se desplaza hacia una ubicación, infligiendo daño mágico a los enemigos cercanos.",
+          "imagen": "../fotos/habilidades/leblanc_w.webp"
+        },
+        {
+          "coste": 50,
+          "descripcion": "Lanza una cadena que inflige daño mágico y otorga visión del enemigo alcanzado.",
+          "imagen": "../fotos/habilidades/leblanc_e.webp"
+        },
+        {
+          "coste": 0,
+          "tipo": "Ultimate",
+          "descripcion": "Copia y lanza su hechizo más reciente.",
+          "imagen": "../fotos/habilidades/leblanc_r.webp"
+        }
+      ]
+    },
+    {
+      "nombre": "Jayce",
+      "clase": "luchador",
+      "recurso": "mana",
+      "imagen": "https://leagueoflegends.fandom.com/es/wiki/Jayce",
+      "descripcion": "Jayce, el Defensor del Mañana, es un inventor y guerrero que porta un martillo hextech capaz de transformarse en cañón.",
+      "habilidades": [
+        {
+          "tipo": "Pasiva",
+          "descripcion": "Jayce comienza la partida con un punto en su definitiva, donde puede cambiar la forma de su arma: Martillo o Cañón.",
+          "imagen": "../fotos/habilidades/jayce_p.webp"
+
+        },
+        {
+          "coste": 40,
+          "descripcion": "Salta hacia un enemigo, causando daño físico a los enemigos cercanos y ralentizándolos durante 2 segundos.",
+          "imagen": "../fotos/habilidades/jayce_q.webp"
+        },
+        {
+          "coste": 50,
+          "descripcion": "Incrementa la velocidad de ataque durante unos segundos.",
+          "imagen": "../fotos/habilidades/jayce_w.webp"
+        },
+        {
+          "coste": 55,
+          "descripcion": "Empuja a un enemigo, infligiéndole daño.",
+          "imagen": "../fotos/habilidades/jayce_e.webp"
+        },
+        {
+          "tipo": "Ultimate",
+          "coste": 100,
+          "descripcion": "Transforma su martillo en cañón o viceversa, cambiando su conjunto de habilidades.",
+          "imagen": "../fotos/habilidades/jayce_r.webp"
+        }
+      ]
+    },
+    {
+      "nombre": "Sejuani",
+      "clase": "tanque",
+      "recurso": "mana",
+      "imagen": "https://leagueoflegends.fandom.com/es/wiki/Sejuani",
+      "descripcion": "Sejuani, líder de la Garra Invernal, es una temible guerrera de Freljord que carga a la batalla montada en su jabalí.",
+      "habilidades": [
+        {
+          "tipo": "Pasiva",
+          "descripcion": "Sejuani obtiene resistencia adicional y aplica efectos de congelación con sus ataques."
+
+        },
+        {
+          "coste": 65,
+          "descripcion": "Sejuani carga hacia adelante, infligiendo daño a los enemigos y empujándolos.",
+          "imagen": "../fotos/habilidades/sejuani_q.webp"
+        },
+        {
+          "coste": 30,
+          "descripcion": "Lanza un ataque de barrido con su arma, infligiendo daño en área.",
+          "imagen": "../fotos/habilidades/sejuani_w.webp"
+        },
+        {
+          "coste": 30,
+          "descripcion": "Congela y aturde al enemigo.",
+          "imagen": "../fotos/habilidades/sejuani_e.webp"
+        },
+        {
+          "coste": 100,
+          "tipo": "Ultimate",
+          "descripcion": "Lanza una bola de hielo que aturde y daña a los enemigos.",
+          "imagen": "../fotos/habilidades/sejuani_r.webp"
+        }
+      ]
+    },
+    {
+      "nombre": "Aphelios",
+      "clase": "tirador",
+      "recurso": "mana",
+      "imagen": "https://leagueoflegends.fandom.com/es/wiki/Aphelios",
+      "descripcion": "Aphelios emerge de la sombra de la luz de la luna con las armas desenvainadas...",
+      "habilidades": [
+        {
+          "tipo": "Pasiva",
+          "descripcion": "Aphelios cuenta con cinco armas donde solo puede utilizar dos a la vez. Cada arma tiene su propio ataque básico, además de que cada arma cuenta con 50 balas de munición."
+        },
+        {
+          "coste": 60,
+          "descripcion": "Dispara proyectiles adicionales de sus armas.",
+          "imagen": "../fotos/habilidades/aphelios_q.webp"
+        },
+        {
+          "coste": 0,
+          "descripcion": "Cambia de arma.",
+          "imagen": "../fotos/habilidades/aphelios_w.webp"
+        },
+        {
+          "coste": 0,
+          "descripcion": "Cambia de posición para mejorar sus ataques.",
+          "imagen": "../fotos/habilidades/aphelios_e.webp"
+        },
+        {
+          "coste": 100,
+          "tipo": "Ultimate",
+          "descripcion": "Realiza un ataque en área con su arma principal.",
+          "imagen": "../fotos/habilidades/aphelios_r.webp"
+        }
+      ]
+    },
+    {
+      "nombre": "Thresh",
+      "clase": "soporte",
+      "recurso": "mana",
+      "imagen": "https://leagueoflegends.fandom.com/es/wiki/Thresh",
+      "descripcion": "Thresh es un espíritu torturado que encadena las almas de sus enemigos, arrastrándolos a la oscuridad.",
+      "habilidades": [
+        {
+          "tipo": "Pasiva",
+          "descripcion": "Recoge almas de enemigos caídos para aumentar su armadura y poder de habilidad."
+        },
+        {
+          "coste": 70,
+          "descripcion": "Lanza una cadena que aturde y atrae a los enemigos.",
+          "imagen": "../fotos/habilidades/tresh_q.webp"
+        },
+        {
+          "coste": 50,
+          "descripcion": "Crea un escudo para un aliado y lo acerca a Thresh.",
+          "imagen": "../fotos/habilidades/tresh_w.webp"
+        },
+        {
+          "coste": 50,
+          "descripcion": "Barre con su cadena para dañar y desplazar a los enemigos.",
+          "imagen": "../fotos/habilidades/tresh_e.webp"
+        },
+        {
+          "coste": 100,
+          "tipo": "Ultimate",
+          "descripcion": "Crea una barrera que ralentiza y daña a los enemigos que la atraviesan.",
+          "imagen": "../fotos/habilidades/tresh_r.webp"
+        }
+      ]
+    }
+  ]
+}
