@@ -1,0 +1,51 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Clases</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+</head>
+<body>
+<h1>Clases</h1>
+
+<<script id="clases_template" type="text/x-jsrender">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{for data}}
+        <tr>
+          <td>{{:id}}</td>
+          <td>{{:nombre}}</td>
+        </tr>
+        {{/for}}
+      </tbody>
+    </table>
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
+
+<div id="app"></div>
+<button class="success">
+    <a href="index.html" style="color:white">Tornar a l'index</a>
+</button>
+<script>
+    function showClases(){
+        $.getJSON('/api/clases', function (data) {
+            let html = $('#clases_template').render({data: data});
+            $("#app").html(html);
+
+        });
+    }
+
+    $(document).ready(function () {
+        showClases();
+    })
+</script>
+
+</body>
+</html>

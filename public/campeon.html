@@ -1,0 +1,57 @@
+<head>
+  <meta charset="UTF-8">
+  <title>Campeon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+</head>
+<body>
+<h1>Campeones</h1>
+
+<<script id="campeon_template" type="text/x-jsrender">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Clase</th>
+        <th>Descripción</th>
+        <th>Recurso</th>
+        <th>Imagen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{for data}}
+      <tr>
+        <td>{{:nombre}}</td>
+        <td>{{:clase}}</td>
+        <td>{{:descripcion}}</td>
+        <td>{{:recurso}}</td>
+        <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
+      </tr>
+      {{/for}}
+    </tbody>
+  </table>
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
+
+<div id="app"></div>
+<button class="success">
+  <a href="index.html" style="color:white">Tornar a l'index</a>
+</button>
+<script>
+  function showCampeon(){
+    $.getJSON('/api/campeon', function (data) {
+      let html = $('#campeon_template').render({data: data});
+      $("#app").html(html);
+
+    });
+  }
+
+  $(document).ready(function () {
+    showCampeon();
+  })
+</script>
+
+</body>
+</html>

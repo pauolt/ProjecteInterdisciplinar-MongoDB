@@ -1,0 +1,57 @@
+<head>
+  <meta charset="UTF-8">
+  <title>Habilidades</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+</head>
+<body>
+<h1>Habilidades</h1>
+
+<<script id="habilidad_template" type="text/x-jsrender">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Coste</th>
+        <th>Tipo</th>
+        <th>Descripcion</th>
+        <th>Imagen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{for data}}
+      <tr>
+        <td>{{:id}}</td>
+        <td>{{:coste}}</td>
+        <td>{{:tipo}}</td>
+        <td>{{:descripcion}}</td>
+        <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
+      </tr>
+      {{/for}}
+    </tbody>
+  </table>
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
+
+<div id="app"></div>
+<button class="success">
+  <a href="index.html" style="color:white">Tornar a l'index</a>
+</button>
+<script>
+  function showHabilidad(){
+    $.getJSON('/api/habilidades', function (data) {
+      let html = $('#habilidad_template').render({data: data});
+      $("#app").html(html);
+
+    });
+  }
+
+  $(document).ready(function () {
+    showHabilidad();
+  })
+</script>
+
+</body>
+</html>
