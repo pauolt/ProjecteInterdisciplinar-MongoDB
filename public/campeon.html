@@ -7,7 +7,8 @@
 <body>
 <h1>Campeones</h1>
 
-<<script id="campeon_template" type="text/x-jsrender">
+<script id="campeon_template" type="text/x-jsrender">
+  <a href="#" class="button primary add">Add</a>
   <table>
     <thead>
       <tr>
@@ -26,27 +27,195 @@
         <td>{{:descripcion}}</td>
         <td>{{:recurso}}</td>
         <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
+        <td>
+            <a href="#" data-nombre="{{:nombre}}" class="button warning modify">Modify</a>
+            <a href="#" data-nombre="{{:nombre}}" class="button danger delete">Delete</a>
+        </td>
       </tr>
       {{/for}}
     </tbody>
   </table>
 </script>
 
+<script id="modify_campeon_template" type="text/x-jsrender">
+  <h1>Modificar campeón: {{:campeon.nombre}}</h1>
+  <form id="modify_campeon_form">
+    <label for="nombre">Nombre</label>
+    <input type="text" id="nombre" name="nombre" value="{{:campeon.nombre}}">
+    <br>
+    <label for="clase">Clase</label>
+    <select id="clase" name="clase">
+      {{for Clases ~campeon=campeon}}
+        <option value="{{:nombre}}" {{if nombre == ~campeon.clase}}selected{{/if}}>{{:nombre}}</option>
+      {{/for}}
+     </select>
+    <br>
+    <label for="descripcion">Descripción</label>
+    <input type="text" id="descripcion" name="descripcion" value="{{:campeon.descripcion}}">
+    <br>
+    <label for="recurso">Recurso</label>
+    <input type="text" id="recurso" name="recurso" value="{{:campeon.recurso}}">
+    <br>
+    <label for="imagen">Imagen</label>
+    <input type="text" id="imagen" name="imagen" value="{{:campeon.imagen}}">
+    <br>
+    <input type="submit" class="submit_campeon_form" value="Modify" data-original-nombre="{{:campeon.nombre}}">
+  </form>
+</script>
+
+<script id="add_campeon_template" type="text/x-jsrender">
+  <h1>Añadir nuevo campeón</h1>
+  <form id="add_campeon_form">
+    <label for="nombre">Nombre</label>
+    <input type="text" id="nombre" name="nombre" required>
+    <br>
+    <label for="clase">Clase</label>
+    <select id="clase" name="clase" required>
+      {{for Clases}}
+        <option value="{{:nombre}}">{{:nombre}}</option>
+      {{/for}}
+    </select>
+    <br>
+    <label for="descripcion">Descripción</label>
+    <input type="text" id="descripcion" name="descripcion" required>
+    <br>
+    <label for="recurso">Recurso</label>
+    <input type="text" id="recurso" name="recurso" required>
+    <br>
+    <label for="imagen">Imagen</label>
+    <input type="text" id="imagen" name="imagen">
+    <br>
+    <input type="submit" class="add_campeon_form" value="Añadir campeón">
+  </form>
+</script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
 
 <div id="app"></div>
 <button class="success">
-  <a href="index.html" style="color:white">Tornar a l'index</a>
+  <a href="index.html" style="color: white">Volver al index</a>
 </button>
 <script>
+
   function showCampeon(){
     $.getJSON('/api/campeon', function (data) {
       let html = $('#campeon_template').render({data: data});
       $("#app").html(html);
 
+      $(".modify").on("click", showModifyCampeonForm);
+      $(".add").on("click", addCampeon)
+      $(".delete").on("click", deleteCampeon);
+
     });
   }
+
+  function showModifyCampeonForm(event){
+    event.preventDefault();
+    let nombre = $(this).data("nombre");
+
+    $.getJSON('/api/campeon/' + encodeURIComponent(nombre), function (dataCampeon) {
+      $.getJSON('/api/clases/', function (dataClases){
+        let campeon = dataCampeon;
+        let data = {
+          campeon: dataCampeon,
+          Clases: dataClases
+        };
+
+        console.log("Clases:", dataClases);
+        console.log("Campeón:", dataCampeon[0]);
+
+        let html = $("#modify_campeon_template").render(data);
+        $("#app").html(html);
+
+        $(".submit_campeon_form").on("click", getModifyCampeonFormParams);
+      })
+    })
+  }
+
+  function getModifyCampeonFormParams(event){
+    event.preventDefault();
+    let form = $('#modify_campeon_form');
+
+    let parametrosArray = form.serializeArray();
+    let parametros = {};
+    parametrosArray.forEach(function (field) {
+      parametros[field.name] = field.value;
+    })
+    let nombreOriginal = $(event.target).data('original-nombre');
+
+    $.ajax({
+      url: '/api/campeon/'+ encodeURIComponent(nombreOriginal),
+      method: 'PUT',
+      data: JSON.stringify(parametros),
+      contentType: 'application/json',
+      success: function(data){
+        alert("Campeón modificado correctamente");
+        showCampeon();
+      },
+      error: function(xhr, status, error){
+        alert("Error al modificar el campeón: " + xhr.responseText);
+      }
+    })
+  }
+
+  function addCampeon(event){
+    event.preventDefault();
+    $.getJSON('/api/clases/', function (dataClases) {
+      let data = { Clases: dataClases };
+
+      let html = $('#add_campeon_template').render(data);
+      $("#app").html(html);
+      $(".add_campeon_form").on("click", addCampeonForm);
+    })
+  }
+
+  function addCampeonForm(event) {
+    event.preventDefault();
+    console.log('Se recogen los parámetros del formulario para nuevo campeón');
+
+    let form = $('#add_campeon_form');
+    let parametrosArray = form.serializeArray();
+
+    let parametros = {};
+    parametrosArray.forEach(function(field) {
+      parametros[field.name] = field.value;
+    });
+    console.log(parametros);
+
+    $.ajax({
+      url: '/api/campeon',
+      method: 'POST',
+      data: JSON.stringify(parametros),
+      contentType: 'application/json',
+      success: function(result) {
+        alert('Campeón añadido correctamente');
+        showCampeon();
+      },
+      error: function(xhr, status, error) {
+        alert('Error al añadir campeón: ' + xhr.responseText);
+        console.error(xhr, status, error);
+      }
+    });
+  }
+
+  function deleteCampeon(event){
+    event.preventDefault();
+
+    let nombre = $(this).data("nombre");
+
+    if (confirm("¿Estás seguro de que quieres eliminar este campeon?")) {
+      $.ajax({
+        url: 'api/campeon/' + encodeURIComponent(nombre),
+        type: 'DELETE',
+        success: function () {
+          showCampeon();
+        }
+      })
+    }
+  }
+
 
   $(document).ready(function () {
     showCampeon();

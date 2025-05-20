@@ -7,7 +7,8 @@
 <body>
 <h1>Habilidades</h1>
 
-<<script id="habilidad_template" type="text/x-jsrender">
+<script id="habilidad_template" type="text/x-jsrender">
+  <a href="#" class="button primary add_habilidad">Add</a>
   <table>
     <thead>
       <tr>
@@ -26,10 +27,60 @@
         <td>{{:tipo}}</td>
         <td>{{:descripcion}}</td>
         <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
+        <td>
+          <a href="#" class="button warning modify" data-id="{{:id}}">Modificar</a>
+          <a href="#" class="button danger delete" data-id="{{:id}}">Eliminar</a>
+        </td>
       </tr>
       {{/for}}
     </tbody>
   </table>
+</script>
+
+<script id="modify_habilidad_template" type="text/x-jsrender">
+  <h2>Modificar habilidad</h2>
+  <form id="modify_habilidad_form">
+    <label for="coste">Coste</label>
+    <input type="text" id="coste" name="coste" value="{{:habilidad.coste}}" required><br>
+
+    <label for="tipo">Tipo</label>
+    <input type="text" id="tipo" name="tipo" value="{{:habilidad.tipo}}" required><br>
+
+    <label for="descripcion">Descripción</label>
+    <input type="text" id="descripcion" name="descripcion" value="{{:habilidad.descripcion}}" required><br>
+
+    <label for="imagen">Imagen</label>
+    <input type="text" id="imagen" name="imagen" value="{{:habilidad.imagen}}"><br>
+
+    <input type="submit" class="submit_modify_habilidad" value="Modificar" data-id="{{:habilidad.id}}">
+  </form>
+</script>
+
+<script id="add_habilidad_template" type="text/x-jsrender">
+  <h2>Añadir nueva habilidad</h2>
+  <form id="add_habilidad_form">
+    <label for="coste">Coste</label>
+    <input type="text" id="coste" name="coste" required>
+    <br>
+    <label for="tipo">Tipo</label>
+    <input type="text" id="tipo" name="tipo">
+    <br>
+    <label for="descripcion">Descripción</label>
+    <input type="text" id="descripcion" name="descripcion" required>
+    <br>
+    <label for="imagen">Imagen</label>
+    <input type="text" id="imagen" name="imagen">
+    <br>
+    <label for="campeon_nombre">Campeón</label>
+    <select id="campeon_nombre" name="campeon_nombre" required>
+      {{for campeones}}
+        <option value="{{:nombre}}">{{:nombre}}</option>
+      {{/for}}
+    </select>
+
+
+    <input type="submit" class="add_habilidad_form" value="Añadir habilidad">
+  </form>
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -37,15 +88,109 @@
 
 <div id="app"></div>
 <button class="success">
-  <a href="index.html" style="color:white">Tornar a l'index</a>
+  <a href="index.html" style="color: white">Volver al index</a>
 </button>
 <script>
+
   function showHabilidad(){
     $.getJSON('/api/habilidades', function (data) {
       let html = $('#habilidad_template').render({data: data});
       $("#app").html(html);
+      $(".add_habilidad").on("click", addHabilidad);
+      $(".modify").on("click", showModifyHabilidadForm);
+      $(".delete").on("click", deleteHabilidad);
 
     });
+  }
+
+  function showModifyHabilidadForm(event) {
+    event.preventDefault();
+    const id = $(this).data("id");
+
+    $.getJSON('/api/habilidades/' + id, function (data) {
+      const html = $('#modify_habilidad_template').render({ habilidad: data });
+      $('#app').html(html);
+
+      $(".submit_modify_habilidad").on("click", getModifyHabilidadForm);
+    });
+  }
+
+  function getModifyHabilidadForm(event) {
+    event.preventDefault();
+    const form = $('#modify_habilidad_form');
+    const id = $(event.target).data('id');
+
+    let parametros = {};
+    form.serializeArray().forEach(field => {
+      parametros[field.name] = field.value;
+    });
+
+    $.ajax({
+      url: '/api/habilidades/' + id,
+      method: 'PUT',
+      contentType: 'application/json',
+      data: JSON.stringify(parametros),
+      success: function () {
+        alert("Habilidad modificada correctamente");
+        showHabilidad();
+      },
+      error: function (xhr) {
+        alert("Error al modificar habilidad: " + xhr.responseText);
+      }
+    });
+  }
+
+  function addHabilidad(event) {
+    event.preventDefault();
+    $.getJSON('/api/campeon', function(campeones) {
+      let html = $('#add_habilidad_template').render({ campeones: campeones });
+      $("#app").html(html);
+      $(".add_habilidad_form").on("click", addHabilidadForm);
+    });
+  }
+
+  function addHabilidadForm(event) {
+    event.preventDefault();
+    let form = $('#add_habilidad_form');
+    let parametrosArray = form.serializeArray();
+
+    let parametros = {};
+    parametrosArray.forEach(function(field) {
+      parametros[field.name] = field.value;
+    });
+
+    $.ajax({
+      url: '/api/habilidades',
+      method: 'POST',
+      data: JSON.stringify(parametros),
+      contentType: 'application/json',
+      success: function() {
+        alert("Habilidad añadida correctamente");
+        showHabilidad();
+      },
+      error: function(xhr) {
+        alert("Error al añadir la habilidad: " + xhr.responseText);
+      }
+    });
+  }
+
+  function deleteHabilidad(event) {
+    event.preventDefault();
+    const id = $(this).data("id");
+
+    if (confirm("¿Estás seguro de que quieres eliminar esta habilidad?")) {
+      $.ajax({
+        url: '/api/habilidades/' + id,
+        type: 'DELETE',
+        success: function () {
+          alert("Habilidad eliminada");
+          showHabilidad();
+        },
+        error: function (xhr) {
+          alert("Error al eliminar habilidad: " + xhr.responseText);
+        }
+      });
+    }
   }
 
   $(document).ready(function () {
