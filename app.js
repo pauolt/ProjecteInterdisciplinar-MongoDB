@@ -209,8 +209,6 @@ app.post('/api/habilidades', async (req, res) => {
     }
 });
 
-
-
 app.post('/api/campeon_habilidad', (req, res) => {
     const { campeon_nombre, habilidad_id } = req.body;
     db('campeon_habilidad')
