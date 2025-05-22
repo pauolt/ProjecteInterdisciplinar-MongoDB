@@ -11,5 +11,6 @@
     <orderEntry type="library" name="picnic" level="application" />
     <orderEntry type="library" name="jquery" level="application" />
     <orderEntry type="library" name="jsrender" level="application" />
+    <orderEntry type="library" name="navigo" level="application" />
   </component>
 </module>

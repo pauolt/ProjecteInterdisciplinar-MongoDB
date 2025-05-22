@@ -29,7 +29,6 @@ const db = knex({
     }
 });
 
-
 //Mostrar data
 app.get('/api/campeon', function(req, res) {
   db.select('c.nombre', 'c.clase', 'c.descripcion', 'recurso', 'c.imagen')
@@ -174,7 +173,6 @@ app.put('/api/campeon_habilidad/:campeon/:habilidad', (req, res) => {
         })
         .catch(err => res.status(500).json({ error: 'Error al modificar relación' }));
 });
-
 
 //Añadir data
 app.post('/api/campeon', function(req, res) {

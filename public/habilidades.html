@@ -1,14 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Habilidades</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/navigo/8.11.1/navigo.min.js" referrerpolicy="no-referrer"></script>
+
+
 </head>
 <body>
 <h1>Habilidades</h1>
 
 <script id="habilidad_template" type="text/x-jsrender">
-  <a href="#" class="button primary add_habilidad">Add</a>
+  <a href="#/add" class="button primary">Add</a>
   <table>
     <thead>
       <tr>
@@ -28,8 +36,8 @@
         <td>{{:descripcion}}</td>
         <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
         <td>
-          <a href="#" class="button warning modify" data-id="{{:id}}">Modificar</a>
-          <a href="#" class="button danger delete" data-id="{{:id}}">Eliminar</a>
+          <a href="#/modify/{{:~encode(id)}}" class="button warning" data-id="{{:id}}">Modificar</a>
+          <a href="#/delete/{{:~encode(id)}}" class="button danger" data-id="{{:id}}">Eliminar</a>
         </td>
       </tr>
       {{/for}}
@@ -83,30 +91,40 @@
   </form>
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
-
 <div id="app"></div>
 <button class="success">
   <a href="index.html" style="color: white">Volver al index</a>
 </button>
 <script>
 
+  $.views.helpers({
+    encode: function(val) {
+      return encodeURIComponent(val);
+    }
+  });
+
+  const router = new Navigo('/', {hash:true})
+  router
+          .on('/', showHabilidad)
+          .on('/add', addHabilidad)
+          .on('/modify/:id', ({data}) => {
+            showModifyHabilidadForm(data.id);
+          })
+          .on('/delete/:id', ({data}) => {
+            deleteHabilidad(data.id);
+          })
+          .resolve();
+
   function showHabilidad(){
     $.getJSON('/api/habilidades', function (data) {
       let html = $('#habilidad_template').render({data: data});
       $("#app").html(html);
-      $(".add_habilidad").on("click", addHabilidad);
-      $(".modify").on("click", showModifyHabilidadForm);
-      $(".delete").on("click", deleteHabilidad);
+
 
     });
   }
 
-  function showModifyHabilidadForm(event) {
-    event.preventDefault();
-    const id = $(this).data("id");
-
+  function showModifyHabilidadForm(id) {
     $.getJSON('/api/habilidades/' + id, function (data) {
       const html = $('#modify_habilidad_template').render({ habilidad: data });
       $('#app').html(html);
@@ -140,8 +158,7 @@
     });
   }
 
-  function addHabilidad(event) {
-    event.preventDefault();
+  function addHabilidad() {
     $.getJSON('/api/campeon', function(campeones) {
       let html = $('#add_habilidad_template').render({ campeones: campeones });
       $("#app").html(html);
@@ -174,10 +191,7 @@
     });
   }
 
-  function deleteHabilidad(event) {
-    event.preventDefault();
-    const id = $(this).data("id");
-
+  function deleteHabilidad(id) {
     if (confirm("¿Estás seguro de que quieres eliminar esta habilidad?")) {
       $.ajax({
         url: '/api/habilidades/' + id,
@@ -194,7 +208,7 @@
   }
 
   $(document).ready(function () {
-    showHabilidad();
+    router.navigate('/');
   })
 </script>
 

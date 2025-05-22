@@ -1,40 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Campeon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/navigo/8.11.1/navigo.min.js" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <h1>Campeones</h1>
 
 <script id="campeon_template" type="text/x-jsrender">
-  <a href="#" class="button primary add">Add</a>
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Clase</th>
-        <th>Descripción</th>
-        <th>Recurso</th>
-        <th>Imagen</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{for data}}
-      <tr>
-        <td>{{:nombre}}</td>
-        <td>{{:clase}}</td>
-        <td>{{:descripcion}}</td>
-        <td>{{:recurso}}</td>
-        <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
-        <td>
-            <a href="#" data-nombre="{{:nombre}}" class="button warning modify">Modify</a>
-            <a href="#" data-nombre="{{:nombre}}" class="button danger delete">Delete</a>
-        </td>
-      </tr>
-      {{/for}}
-    </tbody>
-  </table>
+  <a href="#/add" class="button primary">Add</a>  <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Clase</th>
+          <th>Descripción</th>
+          <th>Recurso</th>
+          <th>Imagen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{for data}}
+        <tr>
+          <td>{{:nombre}}</td>
+          <td>{{:clase}}</td>
+          <td>{{:descripcion}}</td>
+          <td>{{:recurso}}</td>
+          <td><img src="{{:imagen}}" width="80" alt="{{:nombre}}"></td>
+          <td>
+            <a href="#/modify/{{:~encode(nombre)}}" data-nombre="{{:nombre}}" class="button warning">Modify</a>
+            <a href="#/delete/{{:~encode(nombre)}}" data-nombre="{{:nombre}}" class="button danger">Delete</a>
+          </td>
+        </tr>
+        {{/for}}
+      </tbody>
+    </table>
 </script>
 
 <script id="modify_campeon_template" type="text/x-jsrender">
@@ -89,35 +94,41 @@
   </form>
 </script>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.15/jsrender.min.js"></script>
-
 <div id="app"></div>
 <button class="success">
   <a href="index.html" style="color: white">Volver al index</a>
 </button>
 <script>
 
+  $.views.helpers({
+    encode: function(val) {
+      return encodeURIComponent(val);
+    }
+  });
+
+  const router = new Navigo('/', {hash:true})
+  router
+          .on('/', showCampeon)
+          .on('/add', addCampeon)
+          .on('/modify/:nombre', ({data}) => {
+            showModifyCampeonForm(data.nombre);
+          })
+          .on('/delete/:nombre', ({data}) => {
+            deleteCampeon(data.nombre);
+          })
+          .resolve();
+
   function showCampeon(){
     $.getJSON('/api/campeon', function (data) {
       let html = $('#campeon_template').render({data: data});
       $("#app").html(html);
 
-      $(".modify").on("click", showModifyCampeonForm);
-      $(".add").on("click", addCampeon)
-      $(".delete").on("click", deleteCampeon);
-
     });
   }
 
-  function showModifyCampeonForm(event){
-    event.preventDefault();
-    let nombre = $(this).data("nombre");
-
+  function showModifyCampeonForm(nombre){
     $.getJSON('/api/campeon/' + encodeURIComponent(nombre), function (dataCampeon) {
       $.getJSON('/api/clases/', function (dataClases){
-        let campeon = dataCampeon;
         let data = {
           campeon: dataCampeon,
           Clases: dataClases
@@ -160,8 +171,7 @@
     })
   }
 
-  function addCampeon(event){
-    event.preventDefault();
+  function addCampeon(){
     $.getJSON('/api/clases/', function (dataClases) {
       let data = { Clases: dataClases };
 
@@ -200,11 +210,7 @@
     });
   }
 
-  function deleteCampeon(event){
-    event.preventDefault();
-
-    let nombre = $(this).data("nombre");
-
+  function deleteCampeon(nombre){
     if (confirm("¿Estás seguro de que quieres eliminar este campeon?")) {
       $.ajax({
         url: 'api/campeon/' + encodeURIComponent(nombre),
@@ -218,7 +224,7 @@
 
 
   $(document).ready(function () {
-    showCampeon();
+      router.navigate('/');
   })
 </script>
 
