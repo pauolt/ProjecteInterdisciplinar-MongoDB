@@ -1,12 +1,10 @@
-var createError = require('http-errors');
+const createError = require('http-errors');
 const express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
-const sqlite3 = require('sqlite3');
-const knex = require('knex');
-
+const { MongoClient, ObjectId } = require('mongodb');
 const app = express();
 
 app.use(logger('dev'));
@@ -16,249 +14,219 @@ app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const db = knex({
-    client: 'sqlite3',
-    connection: {
-        filename: './campeones.sqlite'
-    },
-    useNullAsDefault: true,
-    pool: {
-        afterCreate: (conn, done) => {
-            conn.run('PRAGMA foreign_keys = ON', done);
-        }
+const url = "mongodb://localhost:27017";
+const dbName = 'campeones';
+
+let db, campeonesCol, clasesCol, habilidadesCol, campeonHabilidadCol;
+
+MongoClient.connect(url)
+    .then(client => {
+        db = client.db(dbName);
+        campeonesCol = db.collection('Campeon');
+        clasesCol = db.collection('Clases');
+        habilidadesCol = db.collection('habilidades');
+        campeonHabilidadCol = db.collection('Campeon_Habilidad');
+        console.log('Conectado a MongoDB');
+    })
+    .catch(err => {
+        console.error('Error conectando a MongoDB:', err);
+    });
+
+app.get('/api/campeon', async (req, res) => {
+    try {
+        const campeones = await campeonesCol.find({}).toArray();
+        res.json(campeones);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener campeones' });
     }
 });
 
-//Mostrar data
-app.get('/api/campeon', function(req, res) {
-  db.select('c.nombre', 'c.clase', 'c.descripcion', 'recurso', 'c.imagen')
-      .from('Campeon as c')
-      .then( function(data){
-        res.json(data);
-      })
-})
-
-app.get('/api/clases', function(req, res) {
-  db.select('cl.id', 'cl.nombre')
-      .from('Clases as cl')
-      .then( function(data){
-        res.json(data);
-      })
-})
-
-app.get('/api/habilidades', function(req, res) {
-  db.select('h.id', 'h.coste', 'h.tipo', 'h.descripcion', 'h.imagen')
-      .from('habilidades as h')
-      .then( function(data){
-        res.json(data);
-      })
-})
-
-app.get('/api/habilidades/:id', function(req, res) {
-    const id = req.params.id;
-
-    db('habilidades')
-        .where('id', id)
-        .first()
-        .then(function(habilidad) {
-            if (!habilidad) {
-                res.status(404).json({ error: 'Habilidad no encontrada' });
-            } else {
-                res.json(habilidad);
-            }
-        })
-        .catch(function(error) {
-            console.error('ERROR al obtener habilidad:', error);
-            res.status(500).json({ error: 'Error interno del servidor' });
-        });
-});
-
-app.get('/api/campeon_habilidad', function(req, res) {
-  db.select('ch.campeon_nombre', 'ch.habilidad_id')
-      .from('Campeon_Habilidad as ch')
-      .then( function(data){
-        res.json(data);
-      })
-})
-
-app.get('/api/campeon/:nombre', function(req, res) {
-  const nombre = req.params.nombre.toLowerCase();
-  db.select('c.nombre', 'c.clase', 'c.descripcion', 'recurso', 'c.imagen')
-      .from('Campeon as c')
-      .whereRaw('LOWER(c.nombre) = ?', [nombre])
-      .first()
-      .then( function(data){
-        if  (data){
-          res.json(data);
-        } else {
-          res.status(404).json({error: 'Campeon no encontrado'});
-        }
-      })
-      .catch(function(err) {
-        console.error(err);
-        res.status(500).json({error: 'Error en la consulta'});
-      });
-})
-
-app.get('/api/all', (req, res) => {
-  db('Campeon as c')
-      .select('c.nombre', 'c.clase', 'c.descripcion', 'h.id as habilidad_id', 'h.coste', 'h.tipo', 'h.descripcion as habilidad_descripcion', 'h.imagen'
-      )
-      .leftJoin('Campeon_Habilidad as ch', 'c.nombre', 'ch.campeon_nombre')
-      .leftJoin('Habilidades as h', 'ch.habilidad_id', 'h.id')
-      .then(function(data){
-        res.json(data);
-      })
-      .catch(err => {
-        console.error(err);
-        res.status(500).json({ error: 'Error en la consulta' });
-      });
-});
-
-//Modificar data
-app.put('/api/campeon/:nombre', function(req, res) {
-    const nombre = req.params.nombre;
-    const campeonData = req.body;
-
-    db('Campeon')
-        .update(campeonData)
-        .where('nombre', nombre)
-        .then(function(data) {
-            if(data === 0){
-                res.status(404).json({error: 'Campeón no encontrado'});
-            } else {
-                res.json({ message: "Campeón actualizado", rowsAffected: data});
-            }
-        })
-        .catch(function(error){
-            console.log('ERROR al actualizar campeón:', error);
-            res.status(500).json({error: 'Error interno del servidor'});
-        });
-});
-
-app.put('/api/habilidades/:id', function(req, res) {
-    const id = req.params.id;
-    const habilidadData = req.body;
-
-    db('habilidades')
-        .where('id', id)
-        .update(habilidadData)
-        .then(function(data) {
-            if (data === 0) {
-                res.status(404).json({ error: 'Habilidad no encontrada' });
-            } else {
-                res.json({ message: 'Habilidad actualizada correctamente', rowsAffected: data });
-            }
-        })
-        .catch(function(error) {
-            console.error('ERROR al actualizar habilidad:', error);
-            res.status(500).json({ error: 'Error interno del servidor' });
-        });
-});
-
-app.put('/api/campeon_habilidad/:campeon/:habilidad', (req, res) => {
-    const oldCampeon = req.params.campeon;
-    const oldHabilidad = req.params.habilidad;
-    const { campeon_nombre, habilidad_id } = req.body;
-
-    db('campeon_habilidad')
-        .where({ campeon_nombre: oldCampeon, habilidad_id: oldHabilidad })
-        .update({ campeon_nombre, habilidad_id })
-        .then(data => {
-            if (data === 0) {
-                res.status(404).json({ error: 'Relación no encontrada' });
-            } else {
-                res.json({ message: 'Relación actualizada' });
-            }
-        })
-        .catch(err => res.status(500).json({ error: 'Error al modificar relación' }));
-});
-
-//Añadir data
-app.post('/api/campeon', function(req, res) {
-    const nuevoCampeon = req.body;
-    db('Campeon')
-        .insert(nuevoCampeon)
-        .then(() => {
-            res.status(201).json({message: 'Campeón añadido correctamente'})
-        })
-        .catch(error => {
-            console.error('Error al añadir campeón')
-            res.status(500).json({error: 'Error interno del servidor'});
-        })
-})
-
-app.post('/api/habilidades', async (req, res) => {
-    const { coste, tipo, descripcion, imagen, campeon_nombre } = req.body;
-
+app.get('/api/clases', async (req, res) => {
     try {
-        const [id] = await db('habilidades').insert({ coste, tipo, descripcion, imagen });
+        const clases = await clasesCol.find({}).toArray();
+        res.json(clases);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener clases' });
+    }
+});
 
-        if (!campeon_nombre) {
-            return res.status(400).json({ error: 'Falta el nombre del campeón' });
-        }
+app.get('/api/habilidades', async (req, res) => {
+    try {
+        const habilidades = await habilidadesCol.find({}).toArray();
+        res.json(habilidades);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener habilidades' });
+    }
+});
 
-        await db('campeon_habilidad').insert({ campeon_nombre, habilidad_id: id });
+app.get('/api/habilidades/:id', async (req, res) => {
+    const id = req.params.id;
+    if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'ID inválido' });
+    try {
+        const habilidad = await habilidadesCol.findOne({ _id: new ObjectId(id) });
+        if (!habilidad) return res.status(404).json({ error: 'Habilidad no encontrada' });
+        res.json(habilidad);
+    } catch {
+        res.status(500).json({ error: 'Error al obtener habilidad' });
+    }
+});
 
-        res.status(201).json({ message: 'Habilidad y relación añadidas correctamente' });
-    } catch (error) {
-        console.error('Error al añadir habilidad y relación:', error);
+app.get('/api/campeon_habilidad', async (req, res) => {
+    try {
+        const relaciones = await campeonHabilidadCol.find({}).toArray();
+        res.json(relaciones);
+    } catch {
+        res.status(500).json({ error: 'Error al obtener relaciones' });
+    }
+});
+
+app.get('/api/campeon/:nombre', async (req, res) => {
+    const nombre = req.params.nombre;
+    try {
+        const campeon = await campeonesCol.findOne({ nombre: { $regex: `^${nombre}$`, $options: 'i' } });
+        if (!campeon) return res.status(404).json({ error: 'Campeón no encontrado' });
+        res.json(campeon);
+    } catch {
+        res.status(500).json({ error: 'Error al buscar campeón' });
+    }
+});
+
+app.get('/api/all', async (req, res) => {
+    try {
+        const resultados = await campeonesCol.aggregate([
+            {
+                $lookup: {
+                    from: 'Campeon_Habilidad',
+                    localField: 'nombre',
+                    foreignField: 'campeon_nombre',
+                    as: 'habilidad_relaciones'
+                }
+            },
+            { $unwind: { path: '$habilidad_relaciones', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'habilidades',
+                    localField: 'habilidad_relaciones.habilidad_id',
+                    foreignField: '_id',
+                    as: 'habilidades_info'
+                }
+            },
+            { $unwind: { path: '$habilidades_info', preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    nombre: 1,
+                    clase: 1,
+                    descripcion: 1,
+                    recurso: 1,
+                    imagen: 1,
+                    habilidad: '$habilidades_info'
+                }
+            }
+        ]).toArray();
+        res.json(resultados);
+    } catch {
+        res.status(500).json({ error: 'Error en la consulta' });
+    }
+});
+
+app.put('/api/campeon/:nombre', async (req, res) => {
+    const nombre = req.params.nombre;
+    const data = req.body;
+    try {
+        const result = await campeonesCol.updateOne({ nombre }, { $set: data });
+        if (result.matchedCount === 0) return res.status(404).json({ error: 'Campeón no encontrado' });
+        res.json({ message: 'Campeón actualizado' });
+    } catch {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
-app.post('/api/campeon_habilidad', (req, res) => {
-    const { campeon_nombre, habilidad_id } = req.body;
-    db('campeon_habilidad')
-        .insert({ campeon_nombre, habilidad_id })
-        .then(() => res.status(201).json({ message: 'Relación insertada' }))
-        .catch(error => {
-            console.error(error);
-            res.status(500).json({ error: 'Error al insertar relación' });
-        });
-});
-
-//Borrar data
-app.delete('/api/campeon/:nombre', function(req, res) {
-    const nombre = req.params.nombre;
-    db.delete()
-        .from('Campeon')
-        .where('nombre', nombre)
-        .then(() => {
-            res.status(201).json({message: 'Campeón eliminado correctamente'})
-        })
-        .catch(error => {
-            console.error('Error al añadir campeón')
-            res.status(500).json({error: 'Error interno del servidor'});
-        })
-})
-
-app.delete('/api/habilidades/:id', function(req, res) {
+app.put('/api/habilidades/:id', async (req, res) => {
     const id = req.params.id;
-
-    db('habilidades')
-        .where('id', id)
-        .del()
-        .then(function(data) {
-            if (data === 0) {
-                res.status(404).json({ error: 'Habilidad no encontrada' });
-            } else {
-                res.json({ message: 'Habilidad eliminada correctamente', rowsAffected: data });
-            }
-        })
-        .catch(function(error) {
-            console.error('ERROR al eliminar habilidad:', error);
-            res.status(500).json({ error: 'Error interno del servidor' });
-        });
+    if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'ID inválido' });
+    const data = req.body;
+    try {
+        const result = await habilidadesCol.updateOne({ _id: new ObjectId(id) }, { $set: data });
+        if (result.matchedCount === 0) return res.status(404).json({ error: 'Habilidad no encontrada' });
+        res.json({ message: 'Habilidad actualizada' });
+    } catch {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
+app.put('/api/campeon_habilidad/:campeon/:habilidad', async (req, res) => {
+    const oldCampeon = req.params.campeon;
+    const oldHabilidad = req.params.habilidad;
+    const { campeon_nombre, habilidad_id } = req.body;
+    try {
+        const result = await campeonHabilidadCol.updateOne(
+            { campeon_nombre: oldCampeon, habilidad_id: oldHabilidad },
+            { $set: { campeon_nombre, habilidad_id } }
+        );
+        if (result.matchedCount === 0) return res.status(404).json({ error: 'Relación no encontrada' });
+        res.json({ message: 'Relación actualizada' });
+    } catch {
+        res.status(500).json({ error: 'Error al modificar relación' });
+    }
+});
 
-// catch 404 and forward to error handler
+app.post('/api/campeon', async (req, res) => {
+    try {
+        await campeonesCol.insertOne(req.body);
+        res.status(201).json({ message: 'Campeón añadido correctamente' });
+    } catch {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+app.post('/api/habilidades', async (req, res) => {
+    const { coste, tipo, descripcion, imagen, campeon_nombre } = req.body;
+    if (!campeon_nombre) return res.status(400).json({ error: 'Falta el nombre del campeón' });
+    try {
+        const result = await habilidadesCol.insertOne({ coste, tipo, descripcion, imagen });
+        await campeonHabilidadCol.insertOne({ campeon_nombre, habilidad_id: result.insertedId });
+        res.status(201).json({ message: 'Habilidad y relación añadidas correctamente' });
+    } catch {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+app.post('/api/campeon_habilidad', async (req, res) => {
+    try {
+        await campeonHabilidadCol.insertOne(req.body);
+        res.status(201).json({ message: 'Relación insertada' });
+    } catch {
+        res.status(500).json({ error: 'Error al insertar relación' });
+    }
+});
+
+app.delete('/api/campeon/:nombre', async (req, res) => {
+    const nombre = req.params.nombre;
+    try {
+        const result = await campeonesCol.deleteOne({ nombre });
+        if (result.deletedCount === 0) return res.status(404).json({ error: 'Campeón no encontrado' });
+        res.json({ message: 'Campeón eliminado correctamente' });
+    } catch {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+app.delete('/api/habilidades/:id', async (req, res) => {
+    const id = req.params.id;
+    if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'ID inválido' });
+    try {
+        const result = await habilidadesCol.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) return res.status(404).json({ error: 'Habilidad no encontrada' });
+        res.json({ message: 'Habilidad eliminada correctamente' });
+    } catch {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 app.use(function(req, res, next) {
-  next(createError(404));
+    next(createError(404));
 });
 
-// error handler
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.json({ error: err.message });
