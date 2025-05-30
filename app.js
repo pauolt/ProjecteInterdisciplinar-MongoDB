@@ -7,10 +7,10 @@ const logger = require('morgan');
 
 const app = express();
 
-const monk = require('monk');
+const monkDb = require('monk');
 const { MongoClient, ObjectId } = require('mongodb');
 
-const db = monk('mongodb+srv://admin:bwh8ELBljpUSY6ce@cluster.kr4sbrb.mongodb.net/Campeones?retryWrites=true&w=majority&appName=Cluster');
+const db = monkDb('mongodb+srv://admin:bwh8ELBljpUSY6ce@cluster.kr4sbrb.mongodb.net/Campeones?retryWrites=true&w=majority&appName=Cluster');
 const uri = 'mongodb+srv://admin:bwh8ELBljpUSY6ce@cluster.kr4sbrb.mongodb.net/Campeones?retryWrites=true&w=majority&appName=Cluster';
 
 
@@ -40,8 +40,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const campeonesCol = db.get('Campeon');
 const clasesCol = db.get('Clases');
-const habilidadesCol = db.get('habilidades');
-const campeonHabilidadCol = db.get('Campeon_Habilidad');
+const habilidadesCol = db.get('Habilidades');
+const campeonHabilidadCol = db.get('Campeon_Habilidades');
 
 app.get('/api/campeon', async (req, res) => {
     try {
@@ -189,12 +189,24 @@ app.put('/api/campeon_habilidad/:campeon/:habilidad', async (req, res) => {
 
 app.post('/api/campeon', async (req, res) => {
     try {
-        await campeonesCol.insert(req.body);
-        res.status(201).json({ message: 'Campeón añadido correctamente' });
-    } catch {
+        if (!req.body.nombre) return res.status(400).json({ error: 'Falta el nombre' });
+        const nombreMinusculas = req.body.nombre.toLowerCase();
+        const nuevoCampeon = {
+            _id: nombreMinusculas,
+            ...req.body
+        };
+
+        const result = await dbNative.collection('Campeon').insertOne(nuevoCampeon);
+        res.status(201).json({ message: 'Campeón añadido correctamente', id: result.insertedId });
+    } catch (err) {
+        console.error(err);
+        if (err.code === 11000) {
+            return res.status(409).json({ error: 'Ya existe un campeón con ese ID' });
+        }
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+
 
 app.post('/api/habilidades', async (req, res) => {
     const { coste, tipo, descripcion, imagen, campeon_nombre } = req.body;
@@ -220,7 +232,7 @@ app.post('/api/campeon_habilidad', async (req, res) => {
 app.delete('/api/campeon/:nombre', async (req, res) => {
     const nombre = req.params.nombre;
     try {
-        const result = await campeonesCol.delete({ nombre });
+        const result = await campeonesCol.remove({ nombre });
         if (result.deletedCount === 0) return res.status(404).json({ error: 'Campeón no encontrado' });
         res.json({ message: 'Campeón eliminado correctamente' });
     } catch {
@@ -232,7 +244,7 @@ app.delete('/api/habilidades/:id', async (req, res) => {
     const id = req.params.id;
     if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'ID inválido' });
     try {
-        const result = await habilidadesCol.delete({ _id: new ObjectId(id) });
+        const result = await habilidadesCol.remove({ _id: new ObjectId(id) });
         if (result.deletedCount === 0) return res.status(404).json({ error: 'Habilidad no encontrada' });
         res.json({ message: 'Habilidad eliminada correctamente' });
     } catch {
