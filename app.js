@@ -8,12 +8,10 @@ const logger = require('morgan');
 const app = express();
 
 const monkDb = require('monk');
-const { MongoClient, ObjectId } = require('mongodb');
-
 const db = monkDb('mongodb+srv://admin:bwh8ELBljpUSY6ce@cluster.kr4sbrb.mongodb.net/Campeones?retryWrites=true&w=majority&appName=Cluster');
+
+const { MongoClient, ObjectId } = require('mongodb');
 const uri = 'mongodb+srv://admin:bwh8ELBljpUSY6ce@cluster.kr4sbrb.mongodb.net/Campeones?retryWrites=true&w=majority&appName=Cluster';
-
-
 const mongoClient = new MongoClient(uri);
 
 let dbNative;
